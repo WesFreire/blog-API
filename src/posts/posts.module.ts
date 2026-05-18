@@ -6,6 +6,7 @@ import { PostsService } from './providers/posts.service';
 import { TagsModule } from 'src/tags/tags.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from 'src/users/users.module';
+import { PaginationModule } from 'src/common/pagination/pagination.module';
 
 @Module({
   controllers: [PostsController],
@@ -13,6 +14,7 @@ import { UsersModule } from 'src/users/users.module';
   imports: [
     UsersModule,
     TagsModule,
+    PaginationModule,
     TypeOrmModule.forFeature([Post, MetaOption]),
   ],
 })

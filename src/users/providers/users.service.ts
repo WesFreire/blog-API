@@ -15,6 +15,8 @@ import { ConfigService, ConfigType } from '@nestjs/config';
 import profileConfig from '../config/profile.config';
 import { UsersCreateManyProvider } from './users-create-many.provider';
 import { CreateManyUsersDto } from '../dtos/create-many-users.dto';
+import { CreateUserProvider } from './create-user.provider';
+import { FindOneUserByEmailProvider } from './find-one-user-by-email.provider';
 
 /**
  * Controller class for '/users' API endpoint
@@ -35,49 +37,21 @@ export class UsersService {
      * Inject UsersCreateMany provider
      */
     private readonly usersCreateManyProvider: UsersCreateManyProvider,
-  ) {}
 
-  public async createUser(createUserDto: CreateUserDto) {
-    let existingUser = undefined;
+    /**
+     * Injecting createUserProvider
+     */
+    private readonly createUserProvider: CreateUserProvider,
 
-    try {
-      // Check is user exists with same email
-      existingUser = await this.usersRepository.findOne({
-        where: { email: createUserDto.email },
-      });
-    } catch (error) {
-      // Might save the details of the exception
-      // Information which is sensitive
-      throw new RequestTimeoutException(
-        'Unable to process your request at the moment please try later',
-        {
-          description: 'Error connecting to the database',
-        },
-      );
-    }
+    /**
+     * Inject findOneByEmailProvider
+     */
+    private readonly findOneByEmailProvider: FindOneUserByEmailProvider
+  ) { }
 
-    // Handle exception
-    if (existingUser) {
-      throw new BadRequestException(
-        'The user already exists, please check your email.',
-      );
-    }
+  public async createUser(createUserDto: CreateUserDto) { 
 
-    // Create a new user
-    let newUser = this.usersRepository.create(createUserDto);
-
-    try {
-      newUser = await this.usersRepository.save(newUser);
-    } catch (error) {
-      throw new RequestTimeoutException(
-        'Unable to process your request at the moment please try later',
-        {
-          description: 'Error connecting to the the datbase',
-        },
-      );
-    }
-
-    return newUser;
+    return this.createUserProvider.createUser(createUserDto)
   }
 
   /**
@@ -134,5 +108,9 @@ export class UsersService {
 
   public async createMany(createManyUsersDto: CreateManyUsersDto) {
     return await this.usersCreateManyProvider.createMany(createManyUsersDto);
+  }
+
+  public async findOneByEmail(email:string) {
+    return this.findOneByEmailProvider.findOneByEmail(email)
   }
 }

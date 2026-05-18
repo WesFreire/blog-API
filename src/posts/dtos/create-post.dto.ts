@@ -98,7 +98,7 @@ export class CreatePostDto {
   })
   @IsISO8601()
   @IsOptional()
-  publishOn?: Date;
+  publishOn?: string;
 
   @ApiPropertyOptional({
     description: 'Array of ids of tags',
