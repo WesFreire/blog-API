@@ -1,1 +1,5 @@
-GET  http://localhost:3000/posts/
+### List posts (public, optional auth for likedByMe)
+GET http://localhost:3000/posts?page=1&limit=10
+
+### Get post by id (public, optional auth for likedByMe)
+GET http://localhost:3000/posts/1

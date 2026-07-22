@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Injectable,
+  NotFoundException,
   RequestTimeoutException,
 } from '@nestjs/common';
 import { UsersService } from 'src/users/providers/users.service';
@@ -17,6 +18,8 @@ import { PaginationProvider } from 'src/common/pagination/providers/pagination.p
 import { Paginated } from 'src/common/pagination/interfaces/paginated.interface';
 import { CreatePostProvider } from './create-post.provider';
 import { ActiveUserData } from 'src/auth/interfaces/active-user-data.interface';
+import { LikesService } from './likes.service';
+import { PostWithLikes } from '../interfaces/post-with-likes.interface';
 
 @Injectable()
 export class PostsService {
@@ -48,7 +51,12 @@ export class PostsService {
     /**
      * Inject createPostProvider
      */
-    private readonly createPostProvider: CreatePostProvider
+    private readonly createPostProvider: CreatePostProvider,
+
+    /**
+     * Inject LikesService
+     */
+    private readonly likesService: LikesService,
   ) { }
 
   /**
@@ -59,13 +67,48 @@ export class PostsService {
     return this.createPostProvider.create(createPostDto, user)
   }
 
-  public async findAll(postQuery: GetPostsDto, userId: string): Promise<Paginated<Post>> {
-    let posts = await this.paginationProvider.paginateQuery({
-      limit: postQuery.limit,
-      page: postQuery.page
-    }, this.postsRepository)
+  public async findAll(
+    postQuery: GetPostsDto,
+    userId?: number,
+  ): Promise<Paginated<PostWithLikes>> {
+    const paginatedPosts = await this.paginationProvider.paginateQuery(
+      {
+        limit: postQuery.limit,
+        page: postQuery.page,
+      },
+      this.postsRepository,
+    );
 
-    return posts;
+    paginatedPosts.data = await this.likesService.enrichPostsWithLikes(
+      paginatedPosts.data,
+      userId,
+    );
+
+    return paginatedPosts as Paginated<PostWithLikes>;
+  }
+
+  public async findOne(
+    postId: number,
+    userId?: number,
+  ): Promise<PostWithLikes> {
+    let post: Post | null;
+
+    try {
+      post = await this.postsRepository.findOneBy({ id: postId });
+    } catch (error) {
+      throw new RequestTimeoutException(
+        'Unable to process your request at the moment please try later',
+        {
+          description: 'Error connecting to the database',
+        },
+      );
+    }
+
+    if (!post) {
+      throw new NotFoundException('The post Id does not exist');
+    }
+
+    return this.likesService.enrichPostWithLikes(post, userId);
   }
 
   public async update(patchPostDto: PatchPostDto) {

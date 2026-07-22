@@ -1,0 +1,13 @@
+### List posts (public)
+GET http://localhost:3000/posts?page=1&limit=10
+
+### Get post by id (public)
+GET http://localhost:3000/posts/1
+
+### Like a post (authenticated)
+POST http://localhost:3000/posts/1/likes
+Authorization: Bearer {{accessToken}}
+
+### Unlike a post (authenticated)
+DELETE http://localhost:3000/posts/1/likes
+Authorization: Bearer {{accessToken}}

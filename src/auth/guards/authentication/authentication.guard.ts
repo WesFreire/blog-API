@@ -2,6 +2,7 @@ import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from
 import { Reflector } from '@nestjs/core';
 import { Observable } from 'rxjs';
 import { AccessTokenGuard } from '../access-token/access-token.guard';
+import { OptionalAccessTokenGuard } from '../optional-access-token/optional-access-token.guard';
 import { AuthType } from 'src/auth/enum/auth-type.enum';
 import { AUTH_TYPE_KEY } from 'src/auth/constants/auth.constants';
 
@@ -15,11 +16,13 @@ export class AuthenticationGuard implements CanActivate {
   > = {
       [AuthType.Bearer]: this.accessTokenGuard,
       [AuthType.None]: { canActivate: () => true },
+      [AuthType.Optional]: this.optionalAccessTokenGuard,
     }
   constructor(
     private readonly reflector: Reflector,
 
     private readonly accessTokenGuard: AccessTokenGuard,
+    private readonly optionalAccessTokenGuard: OptionalAccessTokenGuard,
   ) { }
 
   async canActivate(
